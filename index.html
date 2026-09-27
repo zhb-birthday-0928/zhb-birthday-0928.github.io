@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>小张，生日快乐</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:"Microsoft Yahei",sans-serif;}
+body{overflow:hidden;background:#05081a;color:#fff;height:100vh;width:100vw;user-select:none;}
+/* 流星开场页 */
+#pageStart{position:fixed;inset:0;background:#080c24;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+#starField,#meteorWrap{position:absolute;inset:0;overflow:hidden;}
+.star{position:absolute;background:#fff;border-radius:50%;}
+.meteor{position:absolute;height:2px;background:linear-gradient(90deg,rgba(255,255,255,0),#fff);transform:rotate(-30deg);}
+#startTitle{font-size:clamp(2rem,7vw,3.4rem);margin-bottom:48px;text-shadow:0 0 14px #73a8ff;}
+.glowBtn{padding:14px 36px;font-size:1.3rem;border:none;border-radius:999px;background:#254b99;color:#fff;box-shadow:0 0 22px #4285ff;cursor:pointer;transition:0.2s;}
+.glowBtn:hover{transform:scale(1.04);}
+/* 盲盒主页 */
+#pageMain{position:fixed;inset:0;background:#0b102b;z-index:80;display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px;}
+.boxTower{display:grid;grid-template-columns:repeat(4,110px);gap:14px;margin-bottom:20px;}
+.giftBox{width:110px;height:110px;background:#243470;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:44px;cursor:pointer;box-shadow:0 4px 14px #142252;transition:0.2s;}
+.giftBox:hover{transform:scale(1.08);background:#304896;}
+.giftBox.opened{pointer-events:none;opacity:0.35;}
+.boxCounter{font-size:1.1rem;color:#b1c4ff;margin-bottom:16px;}
+#cakeBtn{position:fixed;right:24px;bottom:24px;padding:12px 22px;border:none;border-radius:8px;background:#863b72;color:#fff;font-size:1rem;cursor:pointer;box-shadow:0 0 14px #b8589c;}
+/* 弹窗遮罩 */
+.modalMask{position:fixed;inset:0;background:rgba(0,0,0,0.78);z-index:200;display:none;align-items:center;justify-content:center;padding:16px;}
+.modalCard{background:#131a38;border-radius:14px;max-width:560px;width:100%;max-height:85vh;overflow:auto;padding:24px;position:relative;}
+.modalClose{position:absolute;top:12px;right:14px;background:transparent;border:none;color:#fff;font-size:24px;cursor:pointer;}
+.letterWrap{background:#f7f2e4;color:#222;padding:22px;border-radius:10px;margin-top:14px;line-height:1.8;}
+.ticketCard{border:2px dashed #d4af37;padding:24px;border-radius:10px;margin:14px 0;text-align:center;font-size:1.4rem;color:#ffdd77;min-height:80px;display:flex;align-items:center;justify-content:center;}
+.btn{padding:10px 20px;border:none;border-radius:8px;background:#4268dd;color:#fff;font-size:1rem;cursor:pointer;margin-top:8px;}
+.btnGold{background:#a68429;box-shadow:0 0 10px #d4af37;}
+/*电台样式*/
+.radioPanel{background:#192042;padding:20px;border-radius:12px;margin-top:10px;}
+.radioDisk{width:100px;height:100px;border-radius:50%;background:#111;border:4px solid #333;}
+.radioDisk.play{animation:rotate 3s linear infinite;}
+@keyframes rotate{to{transform:rotate(360deg);}}
+.radioSpectrum{display:flex;gap:6px;height:70px;align-items:flex-end;}
+.specBar{width:8px;background:#52cc92;transition:height 0.12s;}
+.radioRow{display:flex;gap:16px;align-items:center;margin-bottom:14px;}
+.radioText{color:#b0c8ff;margin-bottom:12px;min-height:60px;line-height:1.6;}
+/*爱心全屏层*/
+#heartOverlay{position:fixed;inset:0;background:#05081a;z-index:210;display:none;align-items:center;justify-content:center;}
+#heartText{font-size:clamp(1.8rem,6vw,2.8rem);color:#ff77aa;text-shadow:0 0 24px #ff4477;letter-spacing:0.2em;}
+.heartParticle{position:absolute;color:#ff6699;font-size:26px;pointer-events:none;}
+/*幽灵页面*/
+#ghostOverlay{position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:220;display:none;}
+.ghostTip{position:absolute;top:30px;width:100%;text-align:center;color:#fff;font-size:1.2rem;}
+#ghost{position:absolute;font-size:64px;cursor:pointer;}
+/*空盒子全屏页*/
+#emptyOverlay{position:fixed;inset:0;background:#050718;z-index:230;display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center;}
+.emptyMainText{font-size:1.7rem;color:#dde2ff;margin-bottom:22px;opacity:0;transition:opacity 1s;}
+.emptyPlaceholder{max-width:80vw;padding:30px 20px;background:#141a3b;border-radius:12px;opacity:0;transition:opacity 1s;}
+.emptyDesc{margin-top:12px;font-size:1.2rem;color:#c2ccff;}
+/*蛋糕页面*/
+#pageCake{position:fixed;inset:0;background:#0b0e22;z-index:85;display:none;flex-direction:column;align-items:center;justify-content:center;}
+.cakeBox{position:relative;width:240px;height:220px;margin-bottom:30px;}
+.cakeBase{width:220px;height:130px;background:#bb6478;border-radius:12px 12px 6px 6px;margin:0 auto;position:relative;}
+.candle{position:absolute;top:-44px;width:10px;height:36px;background:#fff4dd;border-radius:2px;}
+.flame{position:absolute;top:-16px;left:-4px;width:18px;height:24px;background:radial-gradient(#ffdd44,#ff7722);border-radius:50%;cursor:pointer;}
+.flame.out{opacity:0;}
+#cakeFinalTitle{font-size:2.2rem;color:#ffb6c2;text-shadow:0 0 16px #ff7799;display:none;}
+</style>
+</head>
+<body>
+<!--开场流星页-->
+<div id="pageStart">
+<div id="starField"></div>
+<div id="meteorWrap"></div>
+<h1 id="startTitle">小张，生日快乐</h1>
+<button class="glowBtn" id="enterBtn">点击有惊喜</button>
+</div>
+<!--盲盒主页面-->
+<div id="pageMain">
+<div class="boxCounter">已开启：<span id="openCnt">0</span> / 8</div>
+<div class="boxTower" id="boxTower">
+</div>
+<button id="cakeBtn">最后的惊喜</button>
+</div>
+<!--通用弹窗-->
+<div class="modalMask" id="modalMask">
+<div class="modalCard" id="modalCard">
+<button class="modalClose">×</button>
+<div id="modalBody"></div>
+</div>
+</div>
+<!--爱心全屏-->
+<div id="heartOverlay">
+<div id="heartText"></div>
+<div id="heartParticleWrap"></div>
+</div>
+<!--幽灵游戏层-->
+<div id="ghostOverlay">
+<div class="ghostTip" id="ghostTip">
+<div>捉到鬼有奖励!</div>
+<div style="font-size:0.85rem;opacity:0.75;margin-top:6px;">点击抓到它领取惊喜</div>
+</div>
+<div id="ghost">👻</div>
+</div>
+<!--空盒子全屏页-->
+<div id="emptyOverlay">
+<div class="emptyMainText" id="emptyMainText"></div>
+<div class="emptyPlaceholder" id="emptyPlaceholder">
+<div class="emptyDesc" id="emptyPhotoDesc"></div>
+<button class="btn" id="emptyCloseBtn">收下这份惊喜</button>
+</div>
+</div>
+<!--蛋糕吹蜡烛页面-->
+<div id="pageCake">
+<div class="cakeBox">
+<div class="cakeBase">
+<div class="candle" style="left:30px;"><div class="flame"></div></div>
+<div class="candle" style="left:105px;"><div class="flame"></div></div>
+<div class="candle" style="left:180px;"><div class="flame"></div></div>
+</div>
+</div>
+<div id="cakeFinalTitle">小张，生日快乐</div>
+</div>
+<script>
+// ====================== 文案配置区（无图片、无音频） ======================
+const config={
+letterTitle:"给小张的一封信",
+letterContent:`小张：
+生日快乐呀！今天是你的生日，也是我陪你过的第四个生日了。967天，说起来好像很久，但回头想想，又觉得一眨眼就过来了。
+可惜这次不能在你身边，异地就是这样，明明很想陪着你，却只能隔着屏幕说一句“生日快乐”。但你要知道，我真的很想你。
+希望你新的一岁一切都顺顺利利的，想做的事都能做成，想要的东西都能得到。谢谢你一直在我身边，虽然隔得远，但你从来没让我觉得孤单过。
+生日快乐，小张₍ᐢ..ᐢ₎♡，以后的日子还长着呢，咱们慢慢走。`,
+letterSign:"小张",
+ticketList:["亲一个","抱一下","红包一个","奶茶一杯","蛋糕一个"],
+heartShowText:"你是我最珍贵的遇见",
+ghostHitText:"恭喜我的小张，成功捕捉专属惊喜！",
+emptyPhotoDesc:"看似空空荡荡，其实全部都是喜欢你。",
+radioContent:"亲爱的小张，生日快乐。很开心陪你走过967个日夜。纵然相隔两地，我的心意始终朝向你。愿新一岁平安顺遂，万事称心，我会一直陪着你。",
+signList:[
+{rank:"上上签",text:"今日宜被爱，忌假装没事"},
+{rank:"大吉",text:"今年想要的全部会慢慢实现"},
+{rank:"上上签",text:"被偏爱一整年"},
+{rank:"吉",text:"烦恼退散，好运常驻"},
+{rank:"大吉",text:"平安喜乐，万事胜意"},
+{rank:"上上签",text:"有人惦记，岁岁欢愉"}
+],
+achievementTitle:"小张同志成就墙",
+achSubTitle:"不完全统计，欢迎补充。",
+achItems:[
+{title:"最佳男友奖",desc:"无可替代、满分专属男朋友"},
+{title:"相爱已经有967天",desc:"岁岁年年朝夕相伴"},
+{title:"我的专属树洞",desc:"永远耐心倾听包容我"},
+{title:"专属笑点",desc:"总能让我随时开心卸下疲惫"},
+{title:"专属饭搭子",desc:"一起吃很多顿饭，走很多段路"}
+]
+};
+//DOM对象
+const pageStart=document.getElementById('pageStart');
+const pageMain=document.getElementById('pageMain');
+const pageCake=document.getElementById('pageCake');
+const enterBtn=document.getElementById('enterBtn');
+const cakeBtn=document.getElementById('cakeBtn');
+const boxTower=document.getElementById('boxTower');
+const openCntEl=document.getElementById('openCnt');
+const modalMask=document.getElementById('modalMask');
+const modalClose=document.querySelector('.modalClose');
+const modalBody=document.getElementById('modalBody');
+const heartOverlay=document.getElementById('heartOverlay');
+const heartText=document.getElementById('heartText');
+const heartParticleWrap=document.getElementById('heartParticleWrap');
+const ghostOverlay=document.getElementById('ghostOverlay');
+const ghostTip=document.getElementById('ghostTip');
+const ghost=document.getElementById('ghost');
+const emptyOverlay=document.getElementById('emptyOverlay');
+const emptyMainText=document.getElementById('emptyMainText');
+const emptyPlaceholder=document.getElementById('emptyPlaceholder');
+const emptyPhotoDesc=document.getElementById('emptyPhotoDesc');
+const emptyCloseBtn=document.getElementById('emptyCloseBtn');
+const flames=Array.from(document.querySelectorAll('.flame'));
+const cakeFinalTitle=document.getElementById('cakeFinalTitle');
+//星空星星生成
+function buildStarField(){
+const sf=document.getElementById('starField');
+for(let i=0;i<140;i++){
+const s=document.createElement('div');
+s.className="star";
+const sz=Math.random()*2+0.4;
+s.style.width=sz+'px';
+s.style.height=sz+'px';
+s.style.left=Math.random()*100+'%';
+s.style.top=Math.random()*100+'%';
+sf.appendChild(s);
+}
+}
+buildStarField();
+//流星
+function createMeteor(){
+    const wrap=document.getElementById("meteorWrap");
+    const meteor=document.createElement("div");
+    meteor.className="meteor";
+    meteor.style.top=Math.random()*45+"px";
+    meteor.style.left=Math.random()*100+"vw";
+    meteor.style.width=Math.random()*80+60+"px";
+    wrap.appendChild(meteor);
+    meteor.animate([
+        {transform:"translate(0px,0px) rotate(-30deg)",opacity:1},
+        {transform:"translate(-280px,280px) rotate(-30deg)",opacity:0}
+    ],{duration:1300,easing:"linear"});
+    setTimeout(()=>meteor.remove(),1300);
+}
+setInterval(createMeteor,2400);
+
+//工具sleep
+function sleep(ms){return new Promise(res=>setTimeout(res,ms));}
+//烟花粒子
+function firework(cx=0.5,cy=0.5){
+const count=100;
+for(let i=0;i<count;i++){
+const p=document.createElement('div');
+p.style.position="fixed";
+p.style.left=(cx*window.innerWidth)+"px";
+p.style.top=(cy*window.innerHeight)+"px";
+p.style.width="6px";p.style.height="6px";
+p.style.borderRadius="50%";
+p.style.background=["#ff7799","#ffdd77","#77ddff","#99ff99"][Math.floor(Math.random()*4)];
+p.style.zIndex="400";
+document.body.appendChild(p);
+const ang=Math.random()*Math.PI*2;
+const speed=Math.random()*140+60;
+const vx=Math.cos(ang)*speed;
+const vy=Math.sin(ang)*speed;
+let t=0;
+const step=()=>{t+=16;
+p.style.left=(cx*window.innerWidth+vx*t/1000)+"px";
+p.style.top=(cy*window.innerHeight+vy*t/1000+0.5*980*(t/1000)*(t/1000))+"px";
+if(t<1100) requestAnimationFrame(step);else p.remove();
+};
+requestAnimationFrame(step);
+}
+}
+//8个盲盒类型打乱
+const giftTypes=[0,1,2,3,4,5,6,7];
+giftTypes.sort(()=>Math.random()-0.5);
+let openedCount=0;
+//生成8个盲盒
+for(let i=0;i<8;i++){
+const box=document.createElement('div');
+box.className="giftBox";
+box.innerText="🎁";
+box.dataset.type=giftTypes[i];
+boxTower.appendChild(box);
+box.onclick=async ()=>{
+if(box.classList.contains('opened')) return;
+box.classList.add('opened');
+openedCount++;
+openCntEl.innerText=openedCount;
+await openGift(parseInt(box.dataset.type));
+};
+}
+
+enterBtn.onclick=()=>{
+pageStart.style.display="none";
+pageMain.style.display="flex";
+};
+cakeBtn.onclick=()=>{
+pageMain.style.display="none";
+pageCake.style.display="flex";
+};
+modalClose.onclick=()=>{modalMask.style.display="none";};
+modalMask.onclick=(e)=>{if(e.target===modalMask) modalMask.style.display="none";};
+
+//打开礼物逻辑
+async function openGift(typeIdx){
+modalBody.innerHTML="";
+ghostOverlay.style.display="none";
+emptyOverlay.style.display="none";
+heartOverlay.style.display="none";
+switch(typeIdx){
+case 0:{
+//情书（无图片）
+modalBody.innerHTML=`<h2>${config.letterTitle}</h2>
+<div class="letterWrap">${config.letterContent.replace(/\n/g,"<br>")}<div style="text-align:right;margin-top:14px;">——${config.letterSign}</div></div>`;
+modalMask.style.display="flex";
+break;
+}
+case1:{
+//幸运券抽奖
+modalBody.innerHTML=`<h2>幸运券抽奖</h2>
+<div class="ticketCard" id="ticketShow">点击按钮抽取一张</div>
+<button class="btn btnGold" id="ticketDrawBtn">抽一张</button>`;
+modalMask.style.display="flex";
+const showEl=document.getElementById("ticketShow");
+const drawBtn=document.getElementById("ticketDrawBtn");
+let rolling=false;
+drawBtn.onclick=async ()=>{
+if(rolling) return;
+rolling=true;
+let idx=0;
+const timer=setInterval(()=>{
+idx=(idx+1)%config.ticketList.length;
+showEl.innerText=config.ticketList[idx];
+},80);
+await sleep(1300);
+clearInterval(timer);
+const final=config.ticketList[Math.floor(Math.random()*config.ticketList.length)];
+showEl.innerText=final;
+drawBtn.innerText="再抽一张";
+rolling=false;
+};
+break;
+}
+case2:{
+//爱心全屏
+heartParticleWrap.innerHTML="";
+heartText.innerText=config.heartShowText;
+heartOverlay.style.display="flex";
+for(let i=0;i<35;i++){
+const h=document.createElement('div');
+h.className="heartParticle";
+h.innerText="♥";
+h.style.left=Math.random()*100+"%";
+h.style.top=Math.random()*100+"%";
+heartParticleWrap.appendChild(h);
+}
+await sleep(3600);
+heartOverlay.style.display="none";
+break;
+}
+case3:{
+//电台盒（纯文字电台，无音频）
+modalBody.innerHTML=`
+<h2>小张FM</h2>
+<div class="radioPanel">
+<div style="color:#88aaff;margin-bottom:10px;">FM100.7.OO专属电台</div>
+<div class="radioRow">
+    <div class="radioDisk" id="radioDisk"></div>
+    <div class="radioSpectrum" id="specWrap">
+        <div class="specBar"></div>
+        <div class="specBar"></div>
+        <div class="specBar"></div>
+        <div class="specBar"></div>
+        <div class="specBar"></div>
+    </div>
+</div>
+<div class="radioText" id="radioDisplay">未播放，点击下方按钮开启电台</div>
+<button class="btn" id="radioCtrlBtn">开启电台</button>
+</div>`;
+modalMask.style.display="flex";
+const disk=document.getElementById("radioDisk");
+const specWrap=document.getElementById("specWrap");
+const radioDisplay=document.getElementById("radioDisplay");
+const radioCtrlBtn=document.getElementById("radioCtrlBtn");
+let radioOn=false;
+let specTimer=null;
+radioCtrlBtn.onclick=()=>{
+if(!radioOn){
+radioOn=true;
+disk.classList.add("play");
+radioDisplay.innerText=config.radioContent;
+radioCtrlBtn.innerText="关闭电台";
+specTimer=setInterval(()=>{
+    specWrap.querySelectorAll(".specBar").forEach(bar=>{
+        bar.style.height=10+Math.random()*60+"px";
+    })
+},120);
+}else{
+radioOn=false;
+disk.classList.remove("play");
+radioDisplay.innerText="电台已关闭";
+radioCtrlBtn.innerText="开启电台";
+clearInterval(specTimer);
+specWrap.querySelectorAll(".specBar").forEach(bar=>bar.style.height="10px");
+}
+};
+break;
+}
+case4:{
+//抓幽灵，无图片，文字提示
+ghostOverlay.style.display="block";
+ghostTip.style.display="block";
+ghost.style.display="none";
+await sleep(1400);
+ghostTip.style.display="none";
+ghost.style.display="block";
+function runGhost(){
+if(ghostOverlay.style.display!=="block") return;
+ghost.style.left=Math.random()*(window.innerWidth-90)+"px";
+ghost.style.top=Math.random()*(window.innerHeight-100)+"px";
+setTimeout(runGhost,450+Math.random()*350);
+}
+runGhost();
+ghost.onclick=()=>{
+ghostOverlay.style.display="none";
+firework(0.5,0.5);
+modalBody.innerHTML=`<div style="text-align:center;"><div style="font-size:1.2rem;">${config.ghostHitText}</div></div>`;
+modalMask.style.display="flex";
+};
+break;
+}
+case5:{
+//运势签
+const sign=config.signList[Math.floor(Math.random()*config.signList.length)];
+modalBody.innerHTML=`<h2>今日专属运势签</h2>
+<div class="ticketCard" style="color:#ffdd77;">
+<div style="font-size:1.5rem;">${sign.rank}</div>
+<div style="margin-top:8px;font-size:1.1rem;">${sign.text}</div>
+</div>`;
+modalMask.style.display="flex";
+break;
+}
+case6:{
+//空盒子全屏（无图片）
+emptyOverlay.style.display="flex";
+emptyMainText.style.opacity=0;
+emptyPlaceholder.style.opacity=0;
+await sleep(3200);
+emptyMainText.innerText="哎，盒子里面好像什么都没有……";
+emptyMainText.style.opacity=1;
+await sleep(1400);
+emptyPhotoDesc.innerText=config.emptyPhotoDesc;
+emptyPlaceholder.style.opacity=1;
+setTimeout(()=>firework(0.5,0.5),1800);
+emptyCloseBtn.onclick=()=>{emptyOverlay.style.display="none";};
+break;
+}
+case7:{
+//成就墙（无图片）
+let achHtml=`<h2>${config.achievementTitle}</h2><div style="font-size:0.95rem;color:#a0b4ff;margin-bottom:12px;">${config.achSubTitle}</div>`;
+config.achItems.forEach(it=>{
+achHtml+=`<div style="background:#1e2852;padding:10px;border-radius:8px;margin:8px 0;">
+<div style="font-weight:bold;color:#ffddaa;">${it.title}</div>
+<div style="font-size:0.9rem;color:#b4c4ff;margin-top:4px;">${it.desc}</div>
+</div>`;
+});
+modalBody.innerHTML=achHtml;
+modalMask.style.display="flex";
+break;
+}
+}
+}
+//蛋糕吹蜡烛
+let flameLeft=3;
+flames.forEach(fl=>{
+fl.onpointerdown=()=>{
+if(fl.classList.contains("out")) return;
+fl.classList.add("out");
+flameLeft-=1;
+if(flameLeft<=0){
+firework(0.5,0.35);
+cakeFinalTitle.style.display="block";
+}
+};
+});
+</script>
+</body>
+</html>
